@@ -7,6 +7,7 @@ import 'package:bidhouse/screens/dashboard.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -19,6 +20,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore db = FirebaseFirestore.instance;
   Color color = AppConstants.appColor;
+  String userType = "User Type";
   TextEditingController nameController = TextEditingController(),
       emailController = TextEditingController(),
       phoneNoController = TextEditingController(),
@@ -35,12 +37,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
       {required String userName,
       required String email,
       required String phoneNo,
+      required String userType,
       required String password}) {
     if (userName == "" && email == "" && phoneNo == "" && password == "") {
       AppConstants.showAlertDialog(
           context: context,
           title: "Error",
           content: "Please fill all the fields");
+      return false;
+    } else if (userType == "User Type") {
+      AppConstants.showAlertDialog(
+          context: context, title: "Error", content: "Please Select User Type");
       return false;
     } else if (!RegExp(r"^[a-zA-Z]").hasMatch(userName) ||
         !RegExp(r"^[a-zA-z0-9]+@[a-z]+.[a-z]").hasMatch(email) ||
@@ -62,6 +69,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         await db.collection("Users").where("email", isEqualTo: email).get();
     if (snapshot.docs.isEmpty) {
       return true;
+    } else {
+      AppConstants.showAlertDialog(
+          context: context,
+          title: "Error",
+          content: "User with this email Exist");
     }
     //final userData = AuthenticationModel.fromJson(snapshot.docs.first);
     //return userData;
@@ -83,13 +95,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'email': authModel.email,
         'phoneNo': authModel.phoneNo,
         'imageUrl': authModel.imageUrl,
+        'userType': authModel.userType,
         'password': authModel.password,
-      }).whenComplete(() {
+      }).whenComplete(() async {
+        await savingDataToStorage(authModel);
+        print(authModel.email);
         Navigator.pop(context);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const Dashboard(),
+            builder: (context) => Dashboard(),
           ),
         );
       });
@@ -100,6 +115,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } catch (e) {
       print(e.toString());
     }
+  }
+
+  Future<void> savingDataToStorage(AuthenticationModel authModel) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('email', authModel.email);
+    await prefs.setString('name', authModel.name);
+    await prefs.setString('phoneNo', authModel.phoneNo);
+    await prefs.setString('userType', authModel.userType);
+    await prefs.setString('imageUrl', authModel.imageUrl ?? '');
   }
 
   @override
@@ -180,6 +205,72 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: 15,
                   ),
+                  Container(
+                    width: MediaQuery.sizeOf(context).width,
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(width: 0.5)),
+                    child: Theme(
+                      data: Theme.of(context).copyWith(
+                        splashColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          menuWidth: MediaQuery.sizeOf(context).width * 0.8,
+                          borderRadius: BorderRadius.circular(20),
+                          value: userType,
+                          icon: Icon(Icons.arrow_drop_down, color: color),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              userType = newValue!;
+                            });
+                          },
+                          items: <String>[
+                            'User Type',
+                            'User',
+                            'Bidder',
+                          ].map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                    top: 8.0,
+                                    bottom: 8.0,
+                                    right: 8.0,
+                                    left: 4.0),
+                                child: Row(
+                                  children: [
+                                    Image.asset(
+                                      'lib/assets/utype.png',
+                                      width: 25,
+                                      height: 25,
+                                    ),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Text(
+                                      value,
+                                      style: TextStyle(
+                                          color: color,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 15,
+                  ),
                   AppConstants.inputField(
                     label: "Password",
                     hintText: "Enter Your Password",
@@ -215,12 +306,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           email: emailController.text.toString().trim(),
                           phoneNo: phoneNoController.text.toString().trim(),
                           imageUrl: '',
+                          userType: userType,
                           password: passwordController.text.toString().trim());
                       //checking the inputs of the user
                       bool validate = validateSignUpData(
                         userName: nameController.text.trim(),
                         email: emailController.text.trim(),
                         phoneNo: phoneNoController.text.trim(),
+                        userType: userType,
                         password: passwordController.text.trim(),
                       );
                       if (validate) {

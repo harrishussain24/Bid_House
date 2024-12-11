@@ -1,11 +1,14 @@
-// ignore_for_file: avoid_print, no_leading_underscores_for_local_identifiers, use_build_context_synchronously
+// ignore_for_file: avoid_print, no_leading_underscores_for_local_identifiers, use_build_context_synchronously, must_be_immutable
 
 import 'package:bidhouse/constants.dart';
+import 'package:bidhouse/models/authenticationModel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  AuthenticationModel? userData;
+  ProfileScreen({super.key, required this.userData});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -13,6 +16,16 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   Color color = AppConstants.appColor;
+
+  Future<void> logout() async {
+    Navigator.pop(context);
+    FirebaseAuth.instance.signOut();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Clear all saved data
+    Navigator.popUntil(context, (route) => route.isFirst);
+    Navigator.pushNamedAndRemoveUntil(
+        context, '/afterlogout', (route) => false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,16 +59,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SizedBox(
                 height: MediaQuery.sizeOf(context).height * 0.01,
               ),
-              const Text(
-                "Bid House",
-                style: TextStyle(
+              Text(
+                widget.userData!.name,
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 26,
                 ),
               ),
-              const Text(
-                "bidhouse@gmail.com",
-                style: TextStyle(
+              Text(
+                widget.userData!.email,
+                style: const TextStyle(
                   fontWeight: FontWeight.w400,
                   fontSize: 20,
                 ),
@@ -141,10 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              Navigator.pop(context);
-                              FirebaseAuth.instance.signOut();
-                              Navigator.pushNamedAndRemoveUntil(
-                                  context, '/afterlogout', (route) => false);
+                              logout();
                             },
                             child: Text(
                               "Yes",

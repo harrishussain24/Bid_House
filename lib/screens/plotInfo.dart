@@ -17,6 +17,7 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
   String selectedUnit = 'Marla'; //for saving area unit user will select.
   String selectedCity = 'Select City'; //for saving the city user will select.
   num floors = 0;
+  String consType = "Not Selected", consMode = "Not Selected";
   String? finalCost; //for saving the final cost calculated.
   bool constructionComplete = false;
   bool constructionNotComplete = false;
@@ -215,13 +216,28 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
                     int area;
                     if (selectedUnit == "Kanal") {
                       area = 20 * int.parse(_controller.text.toString().trim());
-                      CostCalculator.calculatingCost(
-                          area: area, city: selectedCity);
+                      /*CostCalculator.calculatingCost(
+                          area: area, city: selectedCity);*/
+                      CostCalculator.checkingOtherOptions(
+                        area: area,
+                        city: selectedCity,
+                        selectedFloors: floors,
+                        consMode: consMode,
+                        consType: consType,
+                      );
                       setState(() {});
                     } else {
-                      CostCalculator.calculatingCost(
+                      /*CostCalculator.calculatingCost(
                           area: int.parse(_controller.text.toString().trim()),
-                          city: selectedCity);
+                          city: selectedCity);*/
+                      print(floors.toString() + consMode + consType);
+                      CostCalculator.calculatingCost(
+                        area: int.parse(_controller.text.toString().trim()),
+                        city: selectedCity,
+                        selectedFloors: floors,
+                        consMode: consMode,
+                        consType: consType,
+                      );
                       setState(() {});
                     }
                   },
@@ -332,6 +348,7 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
               color: color,
               onSelected: () {
                 setState(() {
+                  consType = "Complete";
                   constructionComplete = true;
                   constructionNotComplete = false;
                 });
@@ -344,6 +361,7 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
               color: color,
               onSelected: () {
                 setState(() {
+                  consType = "Grey Structure";
                   constructionComplete = false;
                   constructionNotComplete = true;
                 });
@@ -368,6 +386,7 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
               color: color,
               onSelected: () {
                 setState(() {
+                  consMode = "With Material";
                   constructionWithMaterial = true;
                   constructionWithoutMaterial = false;
                 });
@@ -380,6 +399,7 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
               color: color,
               onSelected: () {
                 setState(() {
+                  consMode = "Without Material";
                   constructionWithoutMaterial = true;
                   constructionWithMaterial = false;
                 });

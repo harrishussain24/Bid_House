@@ -16,6 +16,7 @@ class AuthenticationModel {
   String email;
   String phoneNo;
   String? imageUrl;
+  String userType;
   String password;
 
   AuthenticationModel({
@@ -24,6 +25,7 @@ class AuthenticationModel {
     required this.email,
     required this.phoneNo,
     this.imageUrl,
+    required this.userType,
     required this.password,
   });
 
@@ -34,6 +36,7 @@ class AuthenticationModel {
         email: json["email"],
         phoneNo: json["phoneNo"],
         imageUrl: json["imageUrl"],
+        userType: json["userType"],
         password: json["password"],
       );
 
@@ -43,6 +46,7 @@ class AuthenticationModel {
         "email": email,
         "phoneNo": phoneNo,
         "imageUrl": imageUrl,
+        "userType": userType,
         "password": password,
       };
 }

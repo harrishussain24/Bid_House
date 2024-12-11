@@ -1,10 +1,12 @@
 // ignore_for_file: use_build_context_synchronously, avoid_print, prefer_const_constructors
 
 import 'package:bidhouse/constants.dart';
+import 'package:bidhouse/models/authenticationModel.dart';
 import 'package:bidhouse/screens/dashboard.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -54,19 +56,26 @@ class _LoginScreenState extends State<LoginScreen> {
       AppConstants.showLoadingDialog(context: context, title: "Logging In...!");
       await auth
           .signInWithEmailAndPassword(email: email, password: password)
-          .then((value) async => {
-                await db
-                    .collection("Users")
-                    .where('email', isEqualTo: email)
-                    .get()
-                    .then((value) => {})
-              })
-          .whenComplete(() {
+          .then(
+            (value) async => {
+              await db
+                  .collection("Users")
+                  .where('email', isEqualTo: email)
+                  .get()
+                  .then(
+                    (value) {},
+                  ),
+            },
+          )
+          .whenComplete(() async {
+        final userData = await getUserData(email);
+        await savingDataToStorage(userData!);
+        print(userData!.email);
         Navigator.pop(context);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const Dashboard(),
+            builder: (context) => Dashboard(),
           ),
         );
       });
@@ -77,6 +86,27 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       print(e);
     }
+  }
+
+  Future<AuthenticationModel?> getUserData(String email) async {
+    final snapshot =
+        await db.collection('Users').where('email', isEqualTo: email).get();
+    if (snapshot.docs.isEmpty) {
+      print('NO Data');
+      return null;
+    }
+    final userData = AuthenticationModel.fromJson(snapshot.docs.first);
+    return userData;
+  }
+
+  Future<void> savingDataToStorage(AuthenticationModel authModel) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('email', authModel.email);
+    await prefs.setString('name', authModel.name);
+    await prefs.setString('phoneNo', authModel.phoneNo);
+    await prefs.setString('userType', authModel.userType);
+    await prefs.setString('imageUrl', authModel.imageUrl!);
   }
 
   @override
