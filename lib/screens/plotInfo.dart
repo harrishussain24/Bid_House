@@ -1,12 +1,16 @@
-// ignore_for_file: file_names, avoid_print, prefer_const_constructors
+// ignore_for_file: file_names, avoid_print, prefer_const_constructors, must_be_immutable, use_build_context_synchronously
 
 import 'package:bidhouse/costCalculator.dart';
+import 'package:bidhouse/models/adsmodel.dart';
+import 'package:bidhouse/models/authenticationModel.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:bidhouse/constants.dart';
 import 'package:intl/intl.dart';
 
 class PlotInfoScreen extends StatefulWidget {
-  const PlotInfoScreen({super.key});
+  AuthenticationModel userData;
+  PlotInfoScreen({super.key, required this.userData});
 
   @override
   State<PlotInfoScreen> createState() => _PlotInfoScreenState();
@@ -18,17 +22,64 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
   String selectedCity = 'Select City'; //for saving the city user will select.
   num floors = 0;
   String consType = "Not Selected", consMode = "Not Selected";
-  String? finalCost; //for saving the final cost calculated.
   bool constructionComplete = false;
   bool constructionNotComplete = false;
   bool constructionWithMaterial = false;
   bool constructionWithoutMaterial = false;
-  bool showConstructionOptions = false; // Toggle for construction options
-  final TextEditingController _controller =
-      TextEditingController(); //for area size
+  bool showConstructionOptions = false;
+  final TextEditingController _controller = TextEditingController();
   final formatter = NumberFormat.compact(
       locale: "en_US",
       explicitSign: false); // for formatting the final calculated value.
+  CollectionReference datacollection =
+      FirebaseFirestore.instance.collection('Ads');
+
+  //saving data to database
+  saveData(AdsModel ad) async {
+    try {
+      AppConstants.showLoadingDialog(context: context, title: "Uploading ...!");
+      // Getting a new document reference from Firestore
+      DocumentReference newDocument = datacollection.doc();
+      // Setting the document ID as the ad's ID
+      ad.id = newDocument.id;
+      // Converting the ad model to JSON
+      var data = ad.toJson();
+      // Saving data to Firestore
+      await newDocument.set(data).whenComplete(() {
+        Navigator.pop(context);
+      });
+      // Showing success message
+      AppConstants.showAlertDialog(
+        context: context,
+        title: "Success",
+        content: "Data Saved ...!",
+      );
+      // Clearing all the values
+      setState(() {
+        selectedCity = 'Select City';
+        selectedUnit = 'Marla';
+        floors = 0;
+        consType = "Not Selected";
+        consMode = "Not Selected";
+        constructionComplete = false;
+        constructionNotComplete = false;
+        constructionWithMaterial = false;
+        constructionWithoutMaterial = false;
+        showConstructionOptions = false;
+        CostCalculator.finalCost = '';
+        _controller.clear();
+      });
+    } catch (error) {
+      // Showing error message
+      Navigator.pop(context);
+      AppConstants.showAlertDialog(
+        context: context,
+        title: "Error",
+        content: error.toString(),
+      );
+      print('Error: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -227,9 +278,6 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
                       );
                       setState(() {});
                     } else {
-                      /*CostCalculator.calculatingCost(
-                          area: int.parse(_controller.text.toString().trim()),
-                          city: selectedCity);*/
                       print(floors.toString() + consMode + consType);
                       CostCalculator.calculatingCost(
                         area: int.parse(_controller.text.toString().trim()),
@@ -249,7 +297,7 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
                   height: 50,
                 ),
                 CostCalculator.finalCost != ''
-                    ? Text(
+                    ? const Text(
                         'Total Estimated Cost',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 24),
@@ -262,6 +310,36 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
                   CostCalculator.finalCost,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
                 ),
+                SizedBox(
+                  height: 10,
+                ),
+                CostCalculator.finalCost == ''
+                    ? Container()
+                    : AppConstants.button(
+                        buttonWidth: 0.5,
+                        buttonHeight: 0.05,
+                        onTap: () {
+                          var data = AdsModel(
+                            id: "",
+                            city: selectedCity,
+                            areaSize:
+                                _controller.text.toString() + selectedUnit,
+                            floors: floors.toString(),
+                            constructionType: consType,
+                            constructionMode: consMode,
+                            totalCost: CostCalculator.finalCost,
+                            userId: widget.userData.id,
+                            userName: widget.userData.name,
+                            userEmail: widget.userData.email,
+                            userImageUrl: widget.userData.imageUrl!,
+                            userPhoneNo: widget.userData.phoneNo,
+                          );
+                          saveData(data);
+                        },
+                        buttonText: "Post Ad",
+                        textSize: 17,
+                        context: context,
+                      ),
               ],
             ),
           ),

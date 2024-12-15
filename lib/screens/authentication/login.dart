@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
           .whenComplete(() async {
         final userData = await getUserData(email);
         await savingDataToStorage(userData!);
-        print(userData!.email);
+        print(userData.email);
         Navigator.pop(context);
         Navigator.push(
           context,
@@ -102,6 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> savingDataToStorage(AuthenticationModel authModel) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('id', authModel.id!);
     await prefs.setString('email', authModel.email);
     await prefs.setString('name', authModel.name);
     await prefs.setString('phoneNo', authModel.phoneNo);

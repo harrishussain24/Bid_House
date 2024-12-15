@@ -31,6 +31,7 @@ class _DashboardState extends State<Dashboard> {
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
+      authenticationModel.id = prefs.getString('id') ?? '';
       authenticationModel.email = prefs.getString('email') ?? '';
       authenticationModel.name = prefs.getString('name') ?? '';
       authenticationModel.phoneNo = prefs.getString('phoneNo') ?? '';
@@ -44,8 +45,8 @@ class _DashboardState extends State<Dashboard> {
     super.initState();
     _loadUserData();
     _pages = [
-      HomeScreen(),
-      PlotInfoScreen(),
+      HomeScreen(userData: authenticationModel),
+      PlotInfoScreen(userData: authenticationModel),
       ChatsScreen(),
       ProfileScreen(userData: authenticationModel),
     ];
