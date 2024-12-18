@@ -45,8 +45,8 @@ class _DashboardState extends State<Dashboard> {
     super.initState();
     _loadUserData();
     _pages = [
-      HomeScreen(userData: authenticationModel),
       PlotInfoScreen(userData: authenticationModel),
+      HomeScreen(userData: authenticationModel),
       ChatsScreen(),
       ProfileScreen(userData: authenticationModel),
     ];
@@ -64,17 +64,17 @@ class _DashboardState extends State<Dashboard> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(
-              Icons.home,
-              color: Color(0xFF607d8b),
-            ),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
               Icons.info,
               color: Color(0xFF607d8b),
             ),
             label: 'Info',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.home,
+              color: Color(0xFF607d8b),
+            ),
+            label: 'Home',
           ),
           BottomNavigationBarItem(
             icon: Icon(

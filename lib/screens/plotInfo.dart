@@ -319,12 +319,18 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
                         buttonWidth: 0.5,
                         buttonHeight: 0.05,
                         onTap: () {
+                          num checkingFloors;
+                          if (floors == 0) {
+                            checkingFloors = 2;
+                          } else {
+                            checkingFloors = floors;
+                          }
                           var data = AdsModel(
                             id: "",
                             city: selectedCity,
                             areaSize:
-                                _controller.text.toString() + selectedUnit,
-                            floors: floors.toString(),
+                                "${_controller.text.toString()} $selectedUnit",
+                            floors: checkingFloors.toString(),
                             constructionType: consType,
                             constructionMode: consMode,
                             totalCost: CostCalculator.finalCost,
