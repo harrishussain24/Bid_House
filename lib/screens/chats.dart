@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_constructors, avoid_print, must_be_immutable
 
 import 'package:bidhouse/constants.dart';
 import 'package:bidhouse/firebasehelper.dart';
@@ -7,46 +7,37 @@ import 'package:bidhouse/models/chatRoomModel.dart';
 import 'package:bidhouse/screens/chatRoom.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class ChatsScreen extends StatefulWidget {
-  const ChatsScreen({super.key});
+  AuthenticationModel? userData;
+  ChatsScreen({super.key, required this.userData});
 
   @override
   State<ChatsScreen> createState() => _ChatsScreenState();
 }
 
 class _ChatsScreenState extends State<ChatsScreen> {
-  var chatsList = <ChatRoomModel>[];
-  var chats = <AuthenticationModel>[];
-  String? id, name;
+  late Stream<List<ChatRoomModel>> _chatsStream;
 
-  Future<void> fetchChats(String id) async {
-    print("Fetching chats...");
-    try {
-      // Fetch data from Firestore once
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection("ChatRooms")
-          .where('users', arrayContains: id.toString())
-          .orderBy('createdOn', descending: true)
-          .get();
-
-      // Process the data
-      chatsList = querySnapshot.docs.map((doc) {
-        return ChatRoomModel.fromMap(doc.data() as Map<String, dynamic>);
-      }).toList();
-
-      print("Chats fetched successfully");
-      print(chatsList);
-    } catch (error) {
-      print("Error fetching Chats collection: $error");
-    }
+  Stream<List<ChatRoomModel>> fetchChats(String id) {
+    return FirebaseFirestore.instance
+        .collection("ChatRooms")
+        .where('users', arrayContains: id.toString())
+        .orderBy('messageSendingTime', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => ChatRoomModel.fromMap(doc.data()))
+          .toList();
+    });
   }
 
-  /*@override
+  @override
   void initState() {
-    fetchChats('');
+    _chatsStream = fetchChats(widget.userData!.id!);
     super.initState();
-  }*/
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,15 +55,24 @@ class _ChatsScreenState extends State<ChatsScreen> {
         ),
         leading: Container(),
       ),
-      body: chatsList.isEmpty
-          ? Center(child: Text('No Chats'))
-          : ListView.builder(
+      body: StreamBuilder<List<ChatRoomModel>>(
+        stream: _chatsStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('No Chats Found.'));
+          } else {
+            List<ChatRoomModel> chatsList = snapshot.data!;
+            return ListView.builder(
               itemCount: chatsList.length,
               itemBuilder: (context, index) {
                 ChatRoomModel data = chatsList[index];
                 Map<String, dynamic> participant = data.participants!;
                 List<String> participantsKeys = participant.keys.toList();
-                participantsKeys.remove(id);
+                participantsKeys.remove(widget.userData!.id!);
                 return FutureBuilder(
                   future: FireBaseHelper.getUserById(participantsKeys[0]),
                   builder: (context, userData) {
@@ -81,9 +81,11 @@ class _ChatsScreenState extends State<ChatsScreen> {
                         AuthenticationModel targetUser =
                             userData.data as AuthenticationModel;
                         String name = targetUser.name.toString();
+                        DateTime dateTime = data.messageSendingTime!;
+                        String formattedTime = DateFormat.jm().format(dateTime);
                         return Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 15.0, vertical: 2.0),
+                              horizontal: 10.0, vertical: 2.0),
                           child: ListTile(
                             shape: Border(
                               bottom: BorderSide(color: AppConstants.appColor),
@@ -94,8 +96,8 @@ class _ChatsScreenState extends State<ChatsScreen> {
                                 MaterialPageRoute(
                                   builder: (context) => ChatRoomScreen(
                                       chatRoom: data,
-                                      ownerName: name,
-                                      id: id!,
+                                      ownerName: userData.data!.name,
+                                      id: userData.data!.id!,
                                       imageUrl: userData.data!.imageUrl!),
                                 ),
                               );
@@ -103,14 +105,27 @@ class _ChatsScreenState extends State<ChatsScreen> {
                             leading: SizedBox(
                               height: 55,
                               width: 55,
-                              child: ClipOval(
-                                child: Image.network(
-                                  targetUser.imageUrl!,
-                                  fit: BoxFit.fill,
-                                  height: 140,
-                                  width: 140,
-                                ),
-                              ),
+                              child: targetUser.imageUrl != ""
+                                  ? ClipOval(
+                                      child: Image.network(
+                                        targetUser.imageUrl!,
+                                        fit: BoxFit.fill,
+                                        height: 140,
+                                        width: 140,
+                                      ),
+                                    )
+                                  : Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(30),
+                                        border: Border.all(
+                                          color: AppConstants.appColor,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.person,
+                                        color: AppConstants.appColor,
+                                      ),
+                                    ),
                             ),
                             title: Text(
                               name,
@@ -136,6 +151,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
                                       fontSize: 15,
                                     ),
                                   ),
+                            trailing: Text(formattedTime),
                           ),
                         );
                       } else {
@@ -146,7 +162,11 @@ class _ChatsScreenState extends State<ChatsScreen> {
                     }
                   },
                 );
-              }),
+              },
+            );
+          }
+        },
+      ),
     );
   }
 }

@@ -47,7 +47,7 @@ class _DashboardState extends State<Dashboard> {
     _pages = [
       PlotInfoScreen(userData: authenticationModel),
       HomeScreen(userData: authenticationModel),
-      ChatsScreen(),
+      ChatsScreen(userData: authenticationModel),
       ProfileScreen(userData: authenticationModel),
     ];
   }

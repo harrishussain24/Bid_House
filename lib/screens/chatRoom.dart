@@ -42,6 +42,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           .doc(newMessage.messageId)
           .set(newMessage.toMap());
       widget.chatRoom.lastMessage = msg;
+      widget.chatRoom.messageSendingTime = DateTime.now();
       FirebaseFirestore.instance
           .collection("ChatRooms")
           .doc(widget.chatRoom.chatRoomId)
@@ -70,16 +71,29 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             SizedBox(
-              height: 40,
-              width: 40,
-              child: ClipOval(
-                child: Image.network(
-                  widget.imageUrl,
-                  fit: BoxFit.fill,
-                  height: 140,
-                  width: 140,
-                ),
-              ),
+              height: 45,
+              width: 45,
+              child: widget.imageUrl != ""
+                  ? ClipOval(
+                      child: Image.network(
+                        widget.imageUrl,
+                        fit: BoxFit.fill,
+                        height: 140,
+                        width: 140,
+                      ),
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: Colors.white,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
             const SizedBox(
               width: 20,

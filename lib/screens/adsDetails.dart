@@ -1,13 +1,20 @@
-// ignore_for_file: must_be_immutable
+// ignore_for_file: must_be_immutable, avoid_print, use_build_context_synchronously
 
 import 'package:bidhouse/constants.dart';
 import 'package:bidhouse/models/adsmodel.dart';
+import 'package:bidhouse/models/authenticationModel.dart';
+import 'package:bidhouse/models/bidModel.dart';
+import 'package:bidhouse/models/chatRoomModel.dart';
+import 'package:bidhouse/screens/chatRoom.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 class AdsDetailsScreen extends StatefulWidget {
   AdsModel adDetails;
-  AdsDetailsScreen({super.key, required this.adDetails});
+  AuthenticationModel userData;
+  AdsDetailsScreen(
+      {super.key, required this.adDetails, required this.userData});
 
   @override
   State<AdsDetailsScreen> createState() => _AdsDetailsScreenState();
@@ -16,8 +23,10 @@ class AdsDetailsScreen extends StatefulWidget {
 class _AdsDetailsScreenState extends State<AdsDetailsScreen> {
   Color color = AppConstants.appColor;
   TextEditingController controller = TextEditingController();
+  ChatRoomModel? chatRoom;
+  Uuid uuid = const Uuid();
 
-  late Stream<List<AdsModel>> _adsStream;
+  //late Stream<List<AdsModel>> _adsStream;
 
   @override
   void initState() {
@@ -25,7 +34,7 @@ class _AdsDetailsScreenState extends State<AdsDetailsScreen> {
     //_adsStream = getAllAdsStream(widget.userData.email);
   }
 
-  Stream<List<AdsModel>> getAllAdsStream(String email) {
+  /*Stream<List<AdsModel>> getAllAdsStream(String email) {
     return FirebaseFirestore.instance
         .collection('Bids')
         .where("userEmail", isEqualTo: email)
@@ -33,6 +42,60 @@ class _AdsDetailsScreenState extends State<AdsDetailsScreen> {
         .map((snapshot) {
       return snapshot.docs.map((doc) => AdsModel.fromJson(doc)).toList();
     });
+  }*/
+
+  sendBid() async {
+    num bid = num.parse(controller.text.trim());
+    if (bid != 0) {
+      BidsModel bidsModel = BidsModel(
+        bidId: uuid.v1(),
+        bidderName: widget.userData.name,
+        bidderEmail: widget.userData.email,
+        bid: bid,
+        createdOn: DateTime.now(),
+      );
+
+      await FirebaseFirestore.instance
+          .collection("Ads")
+          .doc(widget.adDetails.id)
+          .collection("bidsOnAd")
+          .doc(bidsModel.bidId)
+          .set(bidsModel.toMap());
+      print("Bid Sent");
+    }
+  }
+
+  Future<ChatRoomModel?> getChatRoom(String ownerId, userId) async {
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection("ChatRooms")
+        .where("participants.${userId.toString()}", isEqualTo: true)
+        .get();
+    if (snapshot.docs.isNotEmpty) {
+      print("ChatRoom Exist");
+      var docData = snapshot.docs[0].data();
+      ChatRoomModel existingChatRoom =
+          ChatRoomModel.fromMap(docData as Map<String, dynamic>);
+      chatRoom = existingChatRoom;
+    } else {
+      ChatRoomModel newChatRoom = ChatRoomModel(
+        chatRoomId: uuid.v1(),
+        lastMessage: "",
+        participants: {userId.toString(): true, ownerId.toString(): true},
+        createdOn: DateTime.now(),
+        messageSendingTime: DateTime.now(),
+        users: [userId.toString(), ownerId.toString()],
+      );
+
+      await FirebaseFirestore.instance
+          .collection("ChatRooms")
+          .doc(newChatRoom.chatRoomId)
+          .set(newChatRoom.toMap());
+
+      chatRoom = newChatRoom;
+      print("ChatRoom created");
+    }
+
+    return chatRoom;
   }
 
   @override
@@ -70,13 +133,86 @@ class _AdsDetailsScreenState extends State<AdsDetailsScreen> {
             displayData("Cons. Type :", widget.adDetails.constructionType),
             displayData("Cons. Mode :", widget.adDetails.constructionMode),
             displayData("Floors :", widget.adDetails.floors!),
-            const Divider(
-              indent: 10,
-              endIndent: 10,
-            ),
+            const Divider(),
             const Text(
               "Bids on this Ad",
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+            ),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection("Ads")
+                      .doc(widget.adDetails.id)
+                      .collection("bidsOnAd")
+                      .orderBy("createdOn", descending: true)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.active) {
+                      if (snapshot.hasData) {
+                        QuerySnapshot querySnapshot =
+                            snapshot.data as QuerySnapshot;
+
+                        return ListView.builder(
+                          itemCount: querySnapshot.docs.length,
+                          itemBuilder: ((context, index) {
+                            BidsModel bidsModel = BidsModel.fromMap(
+                                querySnapshot.docs[index].data()
+                                    as Map<String, dynamic>);
+                            //DateTime dateTime = bidsModel.createdOn!;
+                            /*String formattedTime =
+                                DateFormat.jm().format(dateTime);*/
+
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  height: 45,
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16.0, vertical: 0),
+                                    title: Text(
+                                      bidsModel.bidderName!,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    trailing: Text(
+                                      "Bid: ${bidsModel.bid.toString()}",
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const Divider(
+                                  height: 0,
+                                  indent: 10,
+                                  endIndent: 10,
+                                )
+                              ],
+                            );
+                          }),
+                        );
+                      } else if (snapshot.hasError) {
+                        return const Center(
+                          child: Text(
+                              "An error occured..! Please check you connection"),
+                        );
+                      } else {
+                        return const Center(
+                          child: Text("Say Hi to your friend"),
+                        );
+                      }
+                    } else {
+                      return Container();
+                    }
+                  },
+                ),
+              ),
             ),
           ],
         ),
@@ -116,7 +252,20 @@ class _AdsDetailsScreenState extends State<AdsDetailsScreen> {
               buttonText: "Chat",
               textSize: 20,
               context: context,
-              onTap: () {},
+              onTap: () async {
+                var chats = await getChatRoom(
+                    widget.userData.id!, widget.adDetails.userId);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatRoomScreen(
+                        chatRoom: chats!,
+                        ownerName: widget.adDetails.userName!,
+                        id: widget.adDetails.userId!,
+                        imageUrl: widget.adDetails.userImageUrl!),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -153,7 +302,18 @@ class _AdsDetailsScreenState extends State<AdsDetailsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              if (widget.adDetails.userEmail != widget.userData.email) {
+                sendBid();
+                controller.clear();
+                Navigator.pop(context);
+              } else {
+                AppConstants.showAlertDialog(
+                    context: context,
+                    title: "Error",
+                    content: "You cannot bid on your on Ad");
+              }
+            },
             child: Text(
               "Bid",
               style: TextStyle(

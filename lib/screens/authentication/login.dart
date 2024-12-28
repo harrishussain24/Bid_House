@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously, avoid_print, prefer_const_constructors
 
 import 'package:bidhouse/constants.dart';
-import 'package:bidhouse/dataValidatingHelper.dart';
+import 'package:bidhouse/dataValidatinHelper.dart';
 import 'package:bidhouse/firebasehelper.dart';
 import 'package:flutter/material.dart';
 
