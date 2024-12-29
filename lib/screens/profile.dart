@@ -1,10 +1,13 @@
-// ignore_for_file: avoid_print, no_leading_underscores_for_local_identifiers, use_build_context_synchronously, must_be_immutable
+// ignore_for_file: avoid_print, no_leading_underscores_for_local_identifiers, use_build_context_synchronously, must_be_immutable, deprecated_member_use
+
+import 'dart:io';
 
 import 'package:bidhouse/constants.dart';
+import 'package:bidhouse/firebasehelper.dart';
 import 'package:bidhouse/models/authenticationModel.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   AuthenticationModel? userData;
@@ -17,14 +20,43 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   Color color = AppConstants.appColor;
 
-  Future<void> logout() async {
-    Navigator.pop(context);
-    FirebaseAuth.instance.signOut();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Clear all saved data
-    Navigator.popUntil(context, (route) => route.isFirst);
-    Navigator.pushNamedAndRemoveUntil(
-        context, '/afterlogout', (route) => false);
+  bool showCameraButton = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.userData!.imageUrl != "") {
+      setState(() {
+        showCameraButton = false;
+      });
+    }
+  }
+
+  void selectImage(ImageSource source, BuildContext context) async {
+    XFile? pickedFile = await ImagePicker().pickImage(source: source);
+    if (pickedFile != null) {
+      cropImage(pickedFile, context);
+    }
+  }
+
+  void cropImage(XFile file, BuildContext context) async {
+    try {
+      CroppedFile? croppedImage = await ImageCropper().cropImage(
+        sourcePath: file.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        compressQuality: 15,
+      );
+      if (croppedImage != null) {
+        FireBaseHelper.imageFile = File(croppedImage.path);
+        Navigator.pop(context);
+        forConfirmation(context);
+        print("Image saved");
+      } else {
+        print("Cropping cancelled");
+      }
+    } catch (e) {
+      print("Error during cropping: $e");
+    }
   }
 
   @override
@@ -51,10 +83,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SizedBox(
                 height: MediaQuery.sizeOf(context).height * 0.05,
               ),
-              const CircleAvatar(
-                minRadius: 40.0,
-                maxRadius: 70.0,
-                backgroundImage: AssetImage('lib/assets/BidHouse.jpeg'),
+              Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(
+                        color: AppConstants.appColor,
+                      ),
+                    ),
+                    child: ClipOval(
+                      child: widget.userData!.imageUrl != ""
+                          ? Image.network(
+                              widget.userData!.imageUrl!,
+                              fit: BoxFit.fill,
+                              height: 120,
+                              width: 120,
+                            )
+                          : FireBaseHelper.imageFile != null
+                              ? Image.asset(
+                                  FireBaseHelper.imageFile!.path,
+                                  fit: BoxFit.fill,
+                                  height: 120,
+                                  width: 120,
+                                )
+                              : Image.asset(
+                                  'lib/assets/BidHouse.jpeg',
+                                  fit: BoxFit.fill,
+                                  height: 120,
+                                  width: 120,
+                                ),
+                    ),
+                  ),
+                  showCameraButton
+                      ? Positioned(
+                          bottom: -15,
+                          right: -10,
+                          child: IconButton(
+                            onPressed: () {
+                              forProfileImage(context);
+                            },
+                            icon: Icon(
+                              Icons.camera_alt,
+                              size: 35,
+                              color: AppConstants.appColor,
+                            ),
+                          ),
+                        )
+                      : Positioned(
+                          bottom: -15,
+                          right: -10,
+                          child: Container(),
+                        ),
+                ],
               ),
               SizedBox(
                 height: MediaQuery.sizeOf(context).height * 0.01,
@@ -154,7 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              logout();
+                              FireBaseHelper.logout(context: context);
                             },
                             child: Text(
                               "Yes",
@@ -172,6 +253,99 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   endIcon: false,
                   textColor: Colors.red),
             ]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  forConfirmation(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "Confirm",
+          style: TextStyle(
+            color: AppConstants.appColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 23,
+          ),
+        ),
+        content: const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              "Are You Sure You Want To Use This As Your Profile Photo..?",
+              style: TextStyle(fontSize: 17),
+            )),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text(
+              "No",
+              style: TextStyle(fontSize: 18, color: AppConstants.appColor),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              FireBaseHelper.uploadData(widget.userData!, context);
+              setState(() {
+                showCameraButton = false;
+              });
+            },
+            child: Text(
+              "Yes",
+              style: TextStyle(fontSize: 18, color: AppConstants.appColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  forProfileImage(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "Upload From...",
+          style: TextStyle(
+            color: AppConstants.appColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 23,
+          ),
+        ),
+        content: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppConstants.button(
+                buttonWidth: 0.6,
+                buttonHeight: 0.06,
+                onTap: () {
+                  selectImage(ImageSource.camera, context);
+                },
+                buttonText: "Camera",
+                textSize: 20,
+                context: context,
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              AppConstants.button(
+                buttonWidth: 0.6,
+                buttonHeight: 0.06,
+                onTap: () {
+                  selectImage(ImageSource.gallery, context);
+                },
+                buttonText: "Gallery",
+                textSize: 20,
+                context: context,
+              ),
+            ],
           ),
         ),
       ),

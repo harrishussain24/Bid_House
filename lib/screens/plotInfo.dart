@@ -267,27 +267,19 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
                     int area;
                     if (selectedUnit == "Kanal") {
                       area = 20 * int.parse(_controller.text.toString().trim());
-                      /*CostCalculator.calculatingCost(
-                          area: area, city: selectedCity);*/
-                      CostCalculator.checkingOtherOptions(
-                        area: area,
-                        city: selectedCity,
-                        selectedFloors: floors,
-                        consMode: consMode,
-                        consType: consType,
-                      );
                       setState(() {});
                     } else {
-                      print(floors.toString() + consMode + consType);
-                      CostCalculator.calculatingCost(
-                        area: int.parse(_controller.text.toString().trim()),
-                        city: selectedCity,
-                        selectedFloors: floors,
-                        consMode: consMode,
-                        consType: consType,
-                      );
-                      setState(() {});
+                      area = int.parse(_controller.text.toString().trim());
                     }
+                    print(floors.toString() + consMode + consType);
+                    CostCalculator.valuesCollector(
+                      area: area,
+                      city: selectedCity,
+                      selectedFloors: floors,
+                      consMode: consMode,
+                      consType: consType,
+                    );
+                    setState(() {});
                   },
                   buttonText: 'Calculate Cost',
                   textSize: 20,

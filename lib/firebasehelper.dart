@@ -1,16 +1,21 @@
 // ignore_for_file: use_build_context_synchronously, avoid_print
 
+import 'dart:io';
+
 import 'package:bidhouse/constants.dart';
 import 'package:bidhouse/localStorageHelper.dart';
 import 'package:bidhouse/models/authenticationModel.dart';
 import 'package:bidhouse/screens/dashboard.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FireBaseHelper {
   static FirebaseAuth auth = FirebaseAuth.instance;
   static FirebaseFirestore db = FirebaseFirestore.instance;
+  static File? imageFile;
 
   //getting user by checking if the user with the id exist
   static Future<AuthenticationModel?> getUserById(String id) async {
@@ -135,5 +140,52 @@ class FireBaseHelper {
     } catch (e) {
       print(e.toString());
     }
+  }
+
+  static Future<void> logout({required BuildContext context}) async {
+    Navigator.pop(context);
+    FirebaseAuth.instance.signOut();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Clear all saved data
+    Navigator.popUntil(context, (route) => route.isFirst);
+    Navigator.pushNamedAndRemoveUntil(
+        context, '/afterlogout', (route) => false);
+  }
+
+  static void uploadData(
+      AuthenticationModel authenticationModel, BuildContext context) async {
+    AppConstants.showLoadingDialog(
+        context: context, title: 'Uploading your Image');
+    File finalImage = imageFile!;
+    print(finalImage);
+    UploadTask uploadTask = FirebaseStorage.instance
+        .ref('profilePictures')
+        .child(authenticationModel.id.toString())
+        .putFile(finalImage);
+
+    TaskSnapshot snapshot = await uploadTask.onError((error, stackTrace) {
+      throw {
+        Navigator.pop(context),
+        AppConstants.showAlertDialog(
+            context: context, title: 'Error', content: error.toString())
+      };
+    });
+
+    String imageUrl = await snapshot.ref.getDownloadURL();
+    authenticationModel.imageUrl = imageUrl;
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(authenticationModel.id.toString())
+        .set(authenticationModel.toJson())
+        .whenComplete(() async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('imageUrl', imageUrl);
+      Navigator.pop(context);
+    }).onError((error, stackTrace) {
+      Navigator.pop(context);
+      AppConstants.showAlertDialog(
+          context: context, title: 'Error', content: error.toString());
+    });
+    print('Data Uploaded');
   }
 }
