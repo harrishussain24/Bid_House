@@ -1,14 +1,14 @@
 // ignore_for_file: prefer_const_constructors, use_build_context_synchronously, must_be_immutable
 
 import 'package:bidhouse/constants.dart';
-import 'package:bidhouse/models/adsmodel.dart';
 import 'package:bidhouse/models/authenticationModel.dart';
-import 'package:bidhouse/screens/adsDetails.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:bidhouse/screens/adsDisplay.dart';
+import 'package:bidhouse/screens/chats.dart';
+import 'package:bidhouse/screens/plotInfo.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
-  AuthenticationModel userData;
+  late AuthenticationModel userData;
   HomeScreen({super.key, required this.userData});
 
   @override
@@ -16,54 +16,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late Stream<List<AdsModel>> _adsStream;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.userData.userType == "Bidder") {
-      _adsStream = getAllAdsStream();
-    } else {
-      _adsStream = getSpecificAdsStream(widget.userData.email);
-    }
-  }
-
-  Stream<List<AdsModel>> getAllAdsStream() {
-    return FirebaseFirestore.instance
-        .collection('Ads')
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) => AdsModel.fromJson(doc)).toList();
-    });
-  }
-
-  Stream<List<AdsModel>> getSpecificAdsStream(String email) {
-    return FirebaseFirestore.instance
-        .collection('Ads')
-        .where("userEmail", isEqualTo: email)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) => AdsModel.fromJson(doc)).toList();
-    });
-  }
-
-  String getUserInitials(String name) {
-    // Spliting the name into words
-    List<String> words =
-        name.split(' ').where((word) => word.isNotEmpty).toList();
-
-    String initials;
-
-    if (words.length > 2) {
-      // Use the first and last words if more than two
-      initials = words.first[0] + words.last[0];
-    } else {
-      // Use initials of all words
-      initials = words.map((word) => word[0]).join();
-    }
-
-    return initials;
-  }
+  List<String> categories = [
+    "1 Marla",
+    "3 Marla",
+    "5 Marla",
+    "8 Marla",
+    "10 Marla",
+    "12 Marla",
+    "1 Kanal",
+    "2 Kanal",
+    "3 Kanal"
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -72,103 +35,208 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         toolbarHeight: 65,
         backgroundColor: color,
-        title: const Text(
-          "Home",
+        centerTitle: false,
+        title: Text(
+          "Hello ${widget.userData.name} ...👋🏻",
           style: TextStyle(
+            overflow: TextOverflow.ellipsis,
             fontWeight: FontWeight.bold,
-            fontSize: 25,
+            fontSize: 27,
           ),
         ),
-        leading: Container(),
+        actions: [
+          SizedBox(
+            height: 50,
+            width: 50,
+            child: ClipOval(
+              child: (widget.userData.imageUrl != null &&
+                      widget.userData.imageUrl!.isNotEmpty)
+                  ? Image.network(widget.userData.imageUrl!)
+                  : Image.asset(
+                      'lib/assets/BidHouse.jpeg',
+                      fit: BoxFit.fill,
+                    ),
+            ),
+          ),
+          const SizedBox(
+            width: 10,
+          ),
+        ],
       ),
-      body: StreamBuilder<List<AdsModel>>(
-        stream: _adsStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No Ads Found.'));
-          } else {
-            List<AdsModel> adsList = snapshot.data!;
-            return ListView.builder(
-              itemCount: adsList.length,
-              itemBuilder: (context, index) {
-                AdsModel ad = adsList[index];
-                String initials = getUserInitials(ad.userName!);
-                return Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AdsDetailsScreen(
-                                adDetails: ad,
-                                userData: widget.userData,
-                              ),
-                            ),
-                          );
-                        },
-                        child: ListTile(
-                          leading: Container(
-                            height: 45,
-                            width: 45,
-                            decoration: BoxDecoration(
-                                border: Border.all(width: 0.2),
-                                borderRadius: BorderRadius.circular(25)),
-                            child: ad.userImageUrl != ""
-                                ? Image.network(ad.userImageUrl!)
-                                : Center(
-                                    child: Text(
-                                    initials,
-                                    style: TextStyle(fontSize: 18),
-                                  )),
+      body: SingleChildScrollView(
+        child: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(
+                'lib/assets/bg1.png',
+              ),
+              fit: BoxFit.cover,
+              opacity: 0.4,
+            ),
+          ),
+          width: MediaQuery.sizeOf(context).width,
+          height: MediaQuery.sizeOf(context).height,
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(
+                height: 30,
+              ),
+              Text(
+                "Browse",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Row(
+                children: [
+                  AppConstants.button(
+                    buttonWidth: 0.3,
+                    buttonHeight: 0.05,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdsDisplayScreen(
+                            category: "No",
+                            userData: widget.userData,
                           ),
-                          title: Text(
-                            ad.city,
+                        ),
+                      );
+                    },
+                    buttonText: "Homes",
+                    textSize: 17,
+                    context: context,
+                  ),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  AppConstants.button(
+                    buttonWidth: 0.4,
+                    buttonHeight: 0.05,
+                    onTap: () {},
+                    buttonText: "Commerical",
+                    textSize: 17,
+                    context: context,
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              Text(
+                "Popular",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppConstants.appColor),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: EdgeInsets.all(15),
+                child: GridView.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 2.2,
+                  ),
+                  itemCount: categories.length,
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    return GestureDetector(
+                      onTap: () {
+                        final selectedCategory = categories[index];
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AdsDisplayScreen(
+                                category: selectedCategory,
+                                userData: widget.userData),
+                          ),
+                        );
+                      },
+                      child: Card(
+                        color: AppConstants.bgColor,
+                        elevation: 3,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                          child: Text(
+                            categories[index],
                             style: TextStyle(
-                                fontSize: 19, fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            'Area: ${ad.areaSize}, Floors: ${ad.floors}',
-                            style: TextStyle(color: color),
-                          ),
-                          trailing: Padding(
-                            padding: const EdgeInsets.only(top: 5.0),
-                            child: Column(
-                              children: [
-                                Text(
-                                  "Estimated Cost",
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  ad.totalCost,
-                                  style: TextStyle(
-                                      fontSize: 19,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
+                                fontSize: 18, fontWeight: FontWeight.w500),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),
-                    ),
-                    Divider(
-                      indent: 10,
-                      endIndent: 10,
-                    ),
-                  ],
-                );
-              },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              widget.userData.userType == "User"
+                  ? AppConstants.button(
+                      buttonWidth: 0.6,
+                      buttonHeight: 0.06,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PlotInfoScreen(userData: widget.userData),
+                          ),
+                        );
+                      },
+                      buttonText: 'Calculate Cost',
+                      textSize: 20,
+                      context: context,
+                    )
+                  : Container(),
+              const SizedBox(
+                height: 30,
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: SizedBox(
+        width: 70,
+        height: 70,
+        child: FloatingActionButton(
+          shape: CircleBorder(),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatsScreen(userData: widget.userData),
+              ),
             );
-          }
-        },
+          },
+          backgroundColor: AppConstants.appColor,
+          child: Icon(
+            Icons.chat_bubble_outline,
+            size: 30,
+          ),
+        ),
       ),
     );
   }

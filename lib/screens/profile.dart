@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:bidhouse/constants.dart';
 import 'package:bidhouse/firebasehelper.dart';
 import 'package:bidhouse/models/authenticationModel.dart';
+import 'package:bidhouse/screens/aboutapp.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -77,9 +78,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
-            width: MediaQuery.of(context).size.width,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(
+                  'lib/assets/bg4.png',
+                ),
+                fit: BoxFit.cover,
+                opacity: 0.5,
+              ),
+            ),
+            width: MediaQuery.sizeOf(context).width,
+            height: MediaQuery.sizeOf(context).height,
             padding: const EdgeInsets.all(10),
-            child: Column(children: [
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
               SizedBox(
                 height: MediaQuery.sizeOf(context).height * 0.05,
               ),
@@ -184,7 +195,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ProfileListTile(
                 title: "Information",
                 icon: Icons.info,
-                onPress: () {},
+                onPress: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AboutAppScreen(),
+                    ),
+                  );
+                },
                 endIcon: true,
               ),
               SizedBox(

@@ -37,20 +37,23 @@ class AdsModel {
     this.userPhoneNo,
   });
 
-  factory AdsModel.fromJson(DocumentSnapshot json) => AdsModel(
-        id: json["id"],
-        city: json["city"],
-        areaSize: json["areaSize"],
-        floors: json["floors"],
-        constructionType: json["constructionType"],
-        constructionMode: json["constructionMode"],
-        totalCost: json["totalCost"],
-        userId: json["userId"],
-        userName: json["userName"],
-        userEmail: json["userEmail"],
-        userImageUrl: json["userImageUrl"],
-        userPhoneNo: json["userPhoneNo"],
-      );
+  factory AdsModel.fromJson(DocumentSnapshot json) {
+    final data = json.data() as Map<String, dynamic>;
+    return AdsModel(
+      id: json.id, // Firestore document ID
+      city: data["city"] ?? '',
+      areaSize: data["areaSize"] ?? '',
+      floors: data["floors"],
+      constructionType: data["constructionType"] ?? '',
+      constructionMode: data["constructionMode"] ?? '',
+      totalCost: data["totalCost"] ?? '',
+      userId: data["userId"],
+      userName: data["userName"],
+      userEmail: data["userEmail"],
+      userImageUrl: data["userImageUrl"],
+      userPhoneNo: data["userPhoneNo"],
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         "id": id,

@@ -84,7 +84,6 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
   @override
   Widget build(BuildContext context) {
     Color color = AppConstants.appColor;
-
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 65,
@@ -101,7 +100,16 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
       body: SingleChildScrollView(
         child: SafeArea(
           child: Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage(
+                    'lib/assets/bg3.png',
+                  ),
+                  fit: BoxFit.cover,
+                  opacity: 0.5),
+            ),
             width: MediaQuery.sizeOf(context).width,
+            height: MediaQuery.sizeOf(context).height,
             padding: EdgeInsets.symmetric(horizontal: 10),
             child: Column(
               children: [
@@ -338,6 +346,9 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
                         textSize: 17,
                         context: context,
                       ),
+                const SizedBox(
+                  height: 40,
+                ),
               ],
             ),
           ),

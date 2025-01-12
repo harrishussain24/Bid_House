@@ -129,7 +129,7 @@ class FireBaseHelper {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => Dashboard(),
+            builder: (context) => const Dashboard(),
           ),
         );
       });
@@ -147,7 +147,7 @@ class FireBaseHelper {
     FirebaseAuth.instance.signOut();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear(); // Clear all saved data
-    Navigator.popUntil(context, (route) => route.isFirst);
+    //Navigator.popUntil(context, (route) => route.isFirst);
     Navigator.pushNamedAndRemoveUntil(
         context, '/afterlogout', (route) => false);
   }
@@ -180,11 +180,15 @@ class FireBaseHelper {
         .whenComplete(() async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('imageUrl', imageUrl);
-      Navigator.pop(context);
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
     }).onError((error, stackTrace) {
-      Navigator.pop(context);
-      AppConstants.showAlertDialog(
-          context: context, title: 'Error', content: error.toString());
+      if (context.mounted) {
+        Navigator.pop(context);
+        AppConstants.showAlertDialog(
+            context: context, title: 'Error', content: error.toString());
+      }
     });
     print('Data Uploaded');
   }

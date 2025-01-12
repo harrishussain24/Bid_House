@@ -2,7 +2,7 @@
 
 import 'package:bidhouse/constants.dart';
 import 'package:bidhouse/models/authenticationModel.dart';
-import 'package:bidhouse/screens/chats.dart';
+import 'package:bidhouse/screens/favourites.dart';
 import 'package:bidhouse/screens/home.dart';
 import 'package:bidhouse/screens/plotInfo.dart';
 import 'package:bidhouse/screens/profile.dart';
@@ -22,6 +22,7 @@ class _DashboardState extends State<Dashboard> {
       name: "", email: "", phoneNo: "", userType: "", password: "");
   int _selectedIndex = 0;
   late List<Widget> _pages;
+  bool isLoading = true;
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -37,38 +38,38 @@ class _DashboardState extends State<Dashboard> {
       authenticationModel.phoneNo = prefs.getString('phoneNo') ?? '';
       authenticationModel.userType = prefs.getString('userType') ?? '';
       authenticationModel.imageUrl = prefs.getString('imageUrl') ?? '';
+      isLoading = false;
+      _initializePages();
     });
+  }
+
+  void _initializePages() {
+    _pages = [
+      HomeScreen(userData: authenticationModel),
+      PlotInfoScreen(userData: authenticationModel),
+      FavouritesScreen(userData: authenticationModel),
+      ProfileScreen(userData: authenticationModel),
+    ];
   }
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
-    _pages = [
-      PlotInfoScreen(userData: authenticationModel),
-      HomeScreen(userData: authenticationModel),
-      ChatsScreen(userData: authenticationModel),
-      ProfileScreen(userData: authenticationModel),
-    ];
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: _pages.isNotEmpty
-            ? _pages[_selectedIndex]
-            : Center(child: CircularProgressIndicator()),
-      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Center(
+              child: _pages.isNotEmpty
+                  ? _pages[_selectedIndex]
+                  : Center(child: Text('No pages available')),
+            ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.info,
-              color: Color(0xFF607d8b),
-            ),
-            label: 'Info',
-          ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.home,
@@ -78,10 +79,17 @@ class _DashboardState extends State<Dashboard> {
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              Icons.message,
+              Icons.info,
               color: Color(0xFF607d8b),
             ),
-            label: 'Chats',
+            label: 'Info',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.favorite,
+              color: Color(0xFF607d8b),
+            ),
+            label: 'Favourite',
           ),
           BottomNavigationBarItem(
             icon: Icon(

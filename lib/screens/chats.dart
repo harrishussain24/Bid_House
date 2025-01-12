@@ -66,103 +66,118 @@ class _ChatsScreenState extends State<ChatsScreen> {
             return Center(child: Text('No Chats Found.'));
           } else {
             List<ChatRoomModel> chatsList = snapshot.data!;
-            return ListView.builder(
-              itemCount: chatsList.length,
-              itemBuilder: (context, index) {
-                ChatRoomModel data = chatsList[index];
-                Map<String, dynamic> participant = data.participants!;
-                List<String> participantsKeys = participant.keys.toList();
-                participantsKeys.remove(widget.userData!.id!);
-                return FutureBuilder(
-                  future: FireBaseHelper.getUserById(participantsKeys[0]),
-                  builder: (context, userData) {
-                    if (userData.connectionState == ConnectionState.done) {
-                      if (userData.data != null) {
-                        AuthenticationModel targetUser =
-                            userData.data as AuthenticationModel;
-                        String name = targetUser.name.toString();
-                        DateTime dateTime = data.messageSendingTime!;
-                        String formattedTime = DateFormat.jm().format(dateTime);
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10.0, vertical: 2.0),
-                          child: ListTile(
-                            shape: Border(
-                              bottom: BorderSide(color: AppConstants.appColor),
-                            ),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChatRoomScreen(
-                                      chatRoom: data,
-                                      ownerName: userData.data!.name,
-                                      id: userData.data!.id!,
-                                      imageUrl: userData.data!.imageUrl!),
-                                ),
-                              );
-                            },
-                            leading: SizedBox(
-                              height: 55,
-                              width: 55,
-                              child: targetUser.imageUrl != ""
-                                  ? ClipOval(
-                                      child: Image.network(
-                                        targetUser.imageUrl!,
-                                        fit: BoxFit.fill,
-                                        height: 140,
-                                        width: 140,
-                                      ),
-                                    )
-                                  : Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(30),
-                                        border: Border.all(
+            return Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage(
+                      'lib/assets/bg2.png',
+                    ),
+                    fit: BoxFit.cover,
+                    opacity: 0.5),
+              ),
+              width: MediaQuery.sizeOf(context).width,
+              height: MediaQuery.sizeOf(context).height,
+              child: ListView.builder(
+                itemCount: chatsList.length,
+                itemBuilder: (context, index) {
+                  ChatRoomModel data = chatsList[index];
+                  Map<String, dynamic> participant = data.participants!;
+                  List<String> participantsKeys = participant.keys.toList();
+                  participantsKeys.remove(widget.userData!.id!);
+                  return FutureBuilder(
+                    future: FireBaseHelper.getUserById(participantsKeys[0]),
+                    builder: (context, userData) {
+                      if (userData.connectionState == ConnectionState.done) {
+                        if (userData.data != null) {
+                          AuthenticationModel targetUser =
+                              userData.data as AuthenticationModel;
+                          String name = targetUser.name.toString();
+                          DateTime dateTime = data.messageSendingTime!;
+                          String formattedTime =
+                              DateFormat.jm().format(dateTime);
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10.0, vertical: 2.0),
+                            child: ListTile(
+                              shape: Border(
+                                bottom:
+                                    BorderSide(color: AppConstants.appColor),
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ChatRoomScreen(
+                                        chatRoom: data,
+                                        ownerName: userData.data!.name,
+                                        id: userData.data!.id!,
+                                        imageUrl: userData.data!.imageUrl!),
+                                  ),
+                                );
+                              },
+                              leading: SizedBox(
+                                height: 55,
+                                width: 55,
+                                child: targetUser.imageUrl != ""
+                                    ? ClipOval(
+                                        child: Image.network(
+                                          targetUser.imageUrl!,
+                                          fit: BoxFit.fill,
+                                          height: 140,
+                                          width: 140,
+                                        ),
+                                      )
+                                    : Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(30),
+                                          border: Border.all(
+                                            color: AppConstants.appColor,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.person,
                                           color: AppConstants.appColor,
                                         ),
                                       ),
-                                      child: Icon(
-                                        Icons.person,
+                              ),
+                              title: Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              subtitle: (data.lastMessage.toString() != "")
+                                  ? Text(
+                                      data.lastMessage.toString(),
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 15,
+                                      ),
+                                    )
+                                  : Text(
+                                      "Say Hi to your new Friend",
+                                      style: TextStyle(
                                         color: AppConstants.appColor,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 15,
                                       ),
                                     ),
+                              trailing: Text(formattedTime),
                             ),
-                            title: Text(
-                              name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                            subtitle: (data.lastMessage.toString() != "")
-                                ? Text(
-                                    data.lastMessage.toString(),
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 15,
-                                    ),
-                                  )
-                                : Text(
-                                    "Say Hi to your new Friend",
-                                    style: TextStyle(
-                                      color: AppConstants.appColor,
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                            trailing: Text(formattedTime),
-                          ),
-                        );
+                          );
+                        } else {
+                          return Container();
+                        }
                       } else {
                         return Container();
                       }
-                    } else {
-                      return Container();
-                    }
-                  },
-                );
-              },
+                    },
+                  );
+                },
+              ),
             );
           }
         },

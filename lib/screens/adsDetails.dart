@@ -253,18 +253,25 @@ class _AdsDetailsScreenState extends State<AdsDetailsScreen> {
               textSize: 20,
               context: context,
               onTap: () async {
-                var chats = await getChatRoom(
-                    widget.userData.id!, widget.adDetails.userId);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatRoomScreen(
-                        chatRoom: chats!,
-                        ownerName: widget.adDetails.userName!,
-                        id: widget.adDetails.userId!,
-                        imageUrl: widget.adDetails.userImageUrl!),
-                  ),
-                );
+                if (widget.adDetails.userEmail != widget.userData.email) {
+                  var chats = await getChatRoom(
+                      widget.userData.id!, widget.adDetails.userId);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatRoomScreen(
+                          chatRoom: chats!,
+                          ownerName: widget.adDetails.userName!,
+                          id: widget.adDetails.userId!,
+                          imageUrl: widget.adDetails.userImageUrl!),
+                    ),
+                  );
+                } else {
+                  AppConstants.showAlertDialog(
+                      context: context,
+                      title: "Error",
+                      content: "You cannot Chat with YourSelf");
+                }
               },
             ),
           ],
@@ -311,7 +318,7 @@ class _AdsDetailsScreenState extends State<AdsDetailsScreen> {
                 AppConstants.showAlertDialog(
                     context: context,
                     title: "Error",
-                    content: "You cannot bid on your on Ad");
+                    content: "You cannot Bid on Your on Ad");
               }
             },
             child: Text(

@@ -16,10 +16,10 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    Future.delayed(const Duration(seconds: 3), () => checkLoginStatus());
   }
 
-  Future<void> _checkLoginStatus() async {
+  Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
@@ -38,8 +38,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'lib/assets/BidHouse.jpeg',
+              height: MediaQuery.sizeOf(context).height * 0.7,
+              width: MediaQuery.sizeOf(context).width * 0.9,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
