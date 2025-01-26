@@ -4,7 +4,6 @@ import 'package:bidhouse/constants.dart';
 import 'package:bidhouse/models/authenticationModel.dart';
 import 'package:bidhouse/screens/favourites.dart';
 import 'package:bidhouse/screens/home.dart';
-import 'package:bidhouse/screens/plotInfo.dart';
 import 'package:bidhouse/screens/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,7 +18,11 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   Color color = AppConstants.appColor;
   AuthenticationModel authenticationModel = AuthenticationModel(
-      name: "", email: "", phoneNo: "", userType: "", password: "");
+    name: "",
+    email: "",
+    phoneNo: "",
+    userType: "",
+  );
   int _selectedIndex = 0;
   late List<Widget> _pages;
   bool isLoading = true;
@@ -46,7 +49,6 @@ class _DashboardState extends State<Dashboard> {
   void _initializePages() {
     _pages = [
       HomeScreen(userData: authenticationModel),
-      PlotInfoScreen(userData: authenticationModel),
       FavouritesScreen(userData: authenticationModel),
       ProfileScreen(userData: authenticationModel),
     ];
@@ -76,13 +78,6 @@ class _DashboardState extends State<Dashboard> {
               color: Color(0xFF607d8b),
             ),
             label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.info,
-              color: Color(0xFF607d8b),
-            ),
-            label: 'Info',
           ),
           BottomNavigationBarItem(
             icon: Icon(

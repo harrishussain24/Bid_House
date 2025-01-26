@@ -6,9 +6,14 @@ import 'package:bidhouse/constants.dart';
 import 'package:bidhouse/firebasehelper.dart';
 import 'package:bidhouse/models/authenticationModel.dart';
 import 'package:bidhouse/screens/aboutapp.dart';
+import 'package:bidhouse/screens/settings.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
   AuthenticationModel? userData;
@@ -57,6 +62,87 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       print("Error during cropping: $e");
+    }
+  }
+
+  Future<void> deleteUser() async {
+    try {
+      AppConstants.showLoadingDialog(
+          context: context, title: 'Deleting Your Profile');
+      User? user = FirebaseAuth.instance.currentUser;
+      String uId = widget.userData!.id!;
+      if (user == null || user.uid != uId) {
+        throw Exception('No user is currently signed in or user ID mismatch.');
+      }
+      String userId = user.uid;
+      //Reference storageRef = FirebaseStorage.instance.ref().child('profilePictures/$uId');
+
+      List<String> extensions = ['jpeg', 'png', 'jpg'];
+
+      // Attempt to delete each possible profile picture
+      for (String ext in extensions) {
+        Reference storageRef = FirebaseStorage.instance
+            .ref()
+            .child('profilePictures/$userId.$ext');
+
+        try {
+          await storageRef.delete();
+          print('Deleted profile picture with extension .$ext');
+        } catch (e) {
+          // If the file doesn't exist, log and continue
+          if (e is FirebaseException && e.code == 'object-not-found') {
+            print('Profile picture .$ext does not exist.');
+          } else {
+            rethrow;
+          }
+        }
+      }
+      await FirebaseFirestore.instance.collection('Users').doc(userId).delete();
+
+      await user.delete();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      Navigator.pop(context);
+
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text(
+                'Success',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  color: AppConstants.appColor,
+                ),
+              ),
+              content: const Text(
+                'Your Profile has been Deleted...!',
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    Navigator.pushNamedAndRemoveUntil(
+                        context, '/afterlogout', (route) => false);
+                  },
+                  child: Text(
+                    "Ok",
+                    style: TextStyle(
+                      color: AppConstants.appColor,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          });
+    } catch (e) {
+      Navigator.pop(context);
+      AppConstants.showAlertDialog(
+          context: context, title: 'Error', content: e.toString());
     }
   }
 
@@ -171,7 +257,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               AppConstants.button(
                 buttonWidth: 0.5,
                 buttonHeight: 0.06,
-                onTap: () {},
+                onTap: () {
+                  deleteUser();
+                },
                 buttonText: "Delete Profile",
                 textSize: 18,
                 context: context,
@@ -186,7 +274,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ProfileListTile(
                 title: "Settings",
                 icon: Icons.settings,
-                onPress: () {},
+                onPress: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SettingScreen(
+                        userData: widget.userData,
+                      ),
+                    ),
+                  );
+                },
                 endIcon: true,
               ),
               SizedBox(

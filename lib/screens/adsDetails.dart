@@ -1,20 +1,25 @@
-// ignore_for_file: must_be_immutable, avoid_print, use_build_context_synchronously
+// ignore_for_file: must_be_immutable, avoid_print, use_build_context_synchronously, file_names
 
 import 'package:bidhouse/constants.dart';
 import 'package:bidhouse/models/adsmodel.dart';
 import 'package:bidhouse/models/authenticationModel.dart';
 import 'package:bidhouse/models/bidModel.dart';
 import 'package:bidhouse/models/chatRoomModel.dart';
+import 'package:bidhouse/models/favouritesModel.dart';
 import 'package:bidhouse/screens/chatRoom.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 class AdsDetailsScreen extends StatefulWidget {
+  bool showFav;
   AdsModel adDetails;
   AuthenticationModel userData;
   AdsDetailsScreen(
-      {super.key, required this.adDetails, required this.userData});
+      {super.key,
+      required this.adDetails,
+      required this.userData,
+      required this.showFav});
 
   @override
   State<AdsDetailsScreen> createState() => _AdsDetailsScreenState();
@@ -24,25 +29,58 @@ class _AdsDetailsScreenState extends State<AdsDetailsScreen> {
   Color color = AppConstants.appColor;
   TextEditingController controller = TextEditingController();
   ChatRoomModel? chatRoom;
+  bool addedToFav = false;
   Uuid uuid = const Uuid();
+  CollectionReference datacollection =
+      FirebaseFirestore.instance.collection('Favourites');
 
   //late Stream<List<AdsModel>> _adsStream;
 
   @override
   void initState() {
     super.initState();
+    if (widget.showFav == true) {
+      addedToFav = true;
+    }
     //_adsStream = getAllAdsStream(widget.userData.email);
   }
 
-  /*Stream<List<AdsModel>> getAllAdsStream(String email) {
-    return FirebaseFirestore.instance
-        .collection('Bids')
-        .where("userEmail", isEqualTo: email)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) => AdsModel.fromJson(doc)).toList();
-    });
-  }*/
+  //saving data to database
+  saveToFavourite(FavouritesModel favAd) async {
+    try {
+      AppConstants.showLoadingDialog(
+          context: context, title: "Adding to your Favourites List...!");
+      // Getting a new document reference from Firestore
+      DocumentReference newDocument = datacollection.doc();
+      // Setting the document ID as the ad's ID
+      favAd.id = newDocument.id;
+      // Converting the ad model to JSON
+      var data = favAd.toJson();
+      // Saving data to Firestore
+      await newDocument.set(data).whenComplete(() {
+        Navigator.pop(context);
+      });
+      // Showing success message
+      AppConstants.showAlertDialog(
+        context: context,
+        title: "Success",
+        content: "Added to Your Favourites List...!",
+      );
+      // Clearing all the values
+      setState(() {
+        addedToFav = true;
+      });
+    } catch (error) {
+      // Showing error message
+      Navigator.pop(context);
+      AppConstants.showAlertDialog(
+        context: context,
+        title: "Error",
+        content: error.toString(),
+      );
+      print('Error: $error');
+    }
+  }
 
   sendBid() async {
     num bid = num.parse(controller.text.trim());
@@ -127,12 +165,43 @@ class _AdsDetailsScreenState extends State<AdsDetailsScreen> {
               widget.adDetails.totalCost,
               style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(
+              height: 10,
+            ),
             displayData("Owner :", widget.adDetails.userName!),
             displayData("City :", widget.adDetails.city),
             displayData("Size :", widget.adDetails.areaSize),
             displayData("Cons. Type :", widget.adDetails.constructionType),
             displayData("Cons. Mode :", widget.adDetails.constructionMode),
             displayData("Floors :", widget.adDetails.floors!),
+            Align(
+              alignment: Alignment.topRight,
+              child: addedToFav == false
+                  ? TextButton.icon(
+                      onPressed: () {
+                        var data = widget.adDetails;
+                        FavouritesModel fav = FavouritesModel(
+                          userEmail: widget.userData.email,
+                          adDetails: data,
+                        );
+                        saveToFavourite(fav);
+                      },
+                      label: const Text(
+                        "Add to Favourite",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      icon: const Icon(
+                        Icons.favorite,
+                        size: 20,
+                      ),
+                    )
+                  : const Text(
+                      "Added to Favourite",
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+            ),
             const Divider(),
             const Text(
               "Bids on this Ad",
@@ -233,22 +302,24 @@ class _AdsDetailsScreenState extends State<AdsDetailsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            AppConstants.button(
-              buttonHeight: 0.047,
-              buttonWidth: 0.37,
-              buttonText: "Bid",
-              textSize: 20,
-              context: context,
-              onTap: () {
-                forBidding(context);
-              },
-            ),
+            widget.userData.userType == "User"
+                ? const SizedBox.shrink()
+                : AppConstants.button(
+                    buttonHeight: 0.047,
+                    buttonWidth: 0.37,
+                    buttonText: "Bid",
+                    textSize: 20,
+                    context: context,
+                    onTap: () {
+                      forBidding(context);
+                    },
+                  ),
             const SizedBox(
               width: 20,
             ),
             AppConstants.button(
-              buttonHeight: 0.047,
-              buttonWidth: 0.37,
+              buttonHeight: widget.userData.userType == "User" ? 0.06 : 0.047,
+              buttonWidth: widget.userData.userType == "User" ? 0.6 : 0.37,
               buttonText: "Chat",
               textSize: 20,
               context: context,

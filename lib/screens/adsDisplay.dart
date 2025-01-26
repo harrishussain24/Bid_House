@@ -1,4 +1,4 @@
-// ignore_for_file: must_be_immutable
+// ignore_for_file: must_be_immutable, avoid_print, use_build_context_synchronously
 
 import 'package:bidhouse/constants.dart';
 import 'package:bidhouse/models/adsmodel.dart';
@@ -31,21 +31,36 @@ class _AdsDisplayScreenState extends State<AdsDisplayScreen> {
       // Use initials of all words
       initials = words.map((word) => word[0]).join();
     }
-
     return initials;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${widget.category} Ads')),
+      appBar: AppBar(
+        backgroundColor: AppConstants.appColor,
+        title: widget.category == "My Ads"
+            ? Text(
+                widget.category,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              )
+            : const Text(
+                'Ads',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+      ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: widget.category != "No"
-            ? FirebaseFirestore.instance
-                .collection("Ads")
-                .where('areaSize', isEqualTo: widget.category)
-                .snapshots()
-            : FirebaseFirestore.instance.collection("Ads").snapshots(),
+        stream: widget.category == "No"
+            ? FirebaseFirestore.instance.collection("Ads").snapshots()
+            : widget.category == "My Ads"
+                ? FirebaseFirestore.instance
+                    .collection("Ads")
+                    .where('userEmail', isEqualTo: widget.userData.email)
+                    .snapshots()
+                : FirebaseFirestore.instance
+                    .collection("Ads")
+                    .where('areaSize', isEqualTo: widget.category)
+                    .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(
@@ -94,6 +109,9 @@ class _AdsDisplayScreenState extends State<AdsDisplayScreen> {
                   child: Padding(
                     padding: const EdgeInsets.only(top: 2.0),
                     child: GestureDetector(
+                      onLongPress: () {
+                        forDeleting(context, doc['id']);
+                      },
                       onTap: () {
                         final adDetails = AdsModel.fromJson(documents[index]);
                         Navigator.push(
@@ -102,6 +120,7 @@ class _AdsDisplayScreenState extends State<AdsDisplayScreen> {
                             builder: (context) => AdsDetailsScreen(
                               adDetails: adDetails,
                               userData: widget.userData,
+                              showFav: false,
                             ),
                           ),
                         );
@@ -131,7 +150,26 @@ class _AdsDisplayScreenState extends State<AdsDisplayScreen> {
                         subtitle: Text(
                           'Area: ${doc['areaSize']}, Floors: ${doc['floors']}',
                           style: TextStyle(color: AppConstants.appColor),
-                        ), // Replace with your field
+                        ),
+                        trailing: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              "Estimated Cost",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              doc['totalCost'],
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -142,5 +180,61 @@ class _AdsDisplayScreenState extends State<AdsDisplayScreen> {
         },
       ),
     );
+  }
+
+  forDeleting(BuildContext context, String docId) {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Center(
+            child: Text(
+          "Bidding",
+          style: TextStyle(
+            color: AppConstants.appColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 25,
+          ),
+        )),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
+          child: Text("Are you sure you want to delete this Ad...!"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              deleteFavourite(docId);
+            },
+            child: Text(
+              "Yes",
+              style: TextStyle(
+                color: AppConstants.appColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> deleteFavourite(String documentId) async {
+    try {
+      // Reference to the Firestore collection
+      CollectionReference favouritesCollection =
+          FirebaseFirestore.instance.collection('Ads');
+
+      // Delete the document by its ID
+      await favouritesCollection.doc(documentId).delete();
+
+      print("Document with ID $documentId deleted successfully.");
+      Navigator.pop(context);
+      AppConstants.showAlertDialog(
+          context: context,
+          title: "Success",
+          content: "Ad Deleted Successfully");
+    } catch (error) {
+      print("Error deleting document: $error");
+    }
   }
 }

@@ -103,14 +103,14 @@ class CostCalculator {
     //only GreyStructure selected
     if (consType == "Grey Structure" &&
         consMode == "Not Selected" &&
-        selectedFloors == 0) {
+        selectedFloors == 2) {
       totalCost = noExtraOptionSelected(
           greyStructCost: greyStructureCost, furnCost: 0, area: area);
     }
     //only Complete Selected
     else if (consType == "Complete" &&
         consMode == "Not Selected" &&
-        selectedFloors == 0) {
+        selectedFloors == 2) {
       totalCost = noExtraOptionSelected(
           greyStructCost: greyStructureCost,
           furnCost: furnishingCost,
@@ -119,7 +119,7 @@ class CostCalculator {
     //only Without Material Selected
     else if (consType == "Not Selected" &&
         consMode == "Without Material" &&
-        selectedFloors == 0) {
+        selectedFloors == 2) {
       totalCost = noExtraOptionSelected(
           greyStructCost: greyStructureCost - 320,
           furnCost: furnishingCost,
@@ -128,7 +128,7 @@ class CostCalculator {
     //only With Material Selected
     else if (consType == "Not Selected" &&
         consMode == "With Material" &&
-        selectedFloors == 0) {
+        selectedFloors == 2) {
       totalCost = noExtraOptionSelected(
           greyStructCost: greyStructureCost,
           furnCost: furnishingCost,
@@ -143,14 +143,14 @@ class CostCalculator {
     // GreyStructure With Material no Floor Selected
     else if (consType == "Grey Structure" &&
         consMode == "With Material" &&
-        selectedFloors == 0) {
+        selectedFloors == 2) {
       totalCost = noExtraOptionSelected(
           greyStructCost: greyStructureCost, furnCost: 0, area: area);
     }
     // GreyStructure Without Material no Floor Selected
     else if (consType == "Grey Structure" &&
         consMode == "Without Material" &&
-        selectedFloors == 0) {
+        selectedFloors == 2) {
       totalCost = noExtraOptionSelected(
           greyStructCost: (greyStructureCost - 320), furnCost: 0, area: area);
     }
@@ -169,7 +169,7 @@ class CostCalculator {
     //Complete With Material No Floor Selected
     else if (consType == "Complete" &&
         consMode == "With Material" &&
-        selectedFloors == 0) {
+        selectedFloors == 2) {
       totalCost = noExtraOptionSelected(
           greyStructCost: greyStructureCost,
           furnCost: furnishingCost,
@@ -178,7 +178,7 @@ class CostCalculator {
     //Complete Without Material No Floor Selected
     else if (consType == "Complete" &&
         consMode == "Without Material" &&
-        selectedFloors == 0) {
+        selectedFloors == 2) {
       totalCost = noExtraOptionSelected(
           greyStructCost: greyStructureCost,
           furnCost: furnishingCost - 50,

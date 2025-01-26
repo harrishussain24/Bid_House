@@ -3,6 +3,8 @@
 import 'package:bidhouse/constants.dart';
 import 'package:bidhouse/dataValidatinHelper.dart';
 import 'package:bidhouse/firebasehelper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,7 +17,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   Color color = AppConstants.appColor;
   TextEditingController emailController = TextEditingController(),
-      passwordController = TextEditingController();
+      passwordController = TextEditingController(),
+      forgotPasswordController = TextEditingController();
   bool show = false;
 
   passwordToggler() {
@@ -105,7 +108,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.topRight,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        forEmailConfirmation(context);
+                      },
                       style: ButtonStyle(
                         overlayColor:
                             WidgetStateProperty.all(Colors.transparent),
@@ -194,6 +199,83 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  forEmailConfirmation(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Center(
+            child: Text(
+          "Confirm",
+          style: TextStyle(
+            color: AppConstants.appColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 25,
+          ),
+        )),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
+          child: SizedBox(
+            width: MediaQuery.sizeOf(context).width * 0.7,
+            child: AppConstants.inputField(
+              label: "Email",
+              hintText: "Enter Your Email",
+              controller: forgotPasswordController,
+              icon: Icons.email,
+              obsecureText: false,
+              keyboardType: TextInputType.emailAddress,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              String mail = forgotPasswordController.text.trim();
+              print(mail);
+              try {
+                AppConstants.showLoadingDialog(
+                    context: context, title: "Confirming...!");
+                final user = await FirebaseFirestore.instance
+                    .collection("Users")
+                    .where("email", isEqualTo: mail)
+                    .get();
+                if (user.docs.isNotEmpty) {
+                  FirebaseAuth.instance
+                      .sendPasswordResetEmail(email: mail)
+                      .then((value) {
+                    Navigator.pop(context);
+                    AppConstants.showAlertDialog(
+                        context: context,
+                        title: "Succcess",
+                        content:
+                            "We have sent you an email to recover your password. Please check your Email");
+                    forgotPasswordController.clear();
+                  });
+                } else if (user.docs.isEmpty) {
+                  Navigator.pop(context);
+                  AppConstants.showAlertDialog(
+                      context: context,
+                      title: "Error",
+                      content: "User Not Found");
+                }
+              } catch (e) {
+                AppConstants.showAlertDialog(
+                    context: context, title: "Error", content: e.toString());
+              }
+            },
+            child: Text(
+              "Continue",
+              style: TextStyle(
+                color: AppConstants.appColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

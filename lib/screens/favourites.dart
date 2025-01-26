@@ -1,3 +1,5 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:bidhouse/constants.dart';
 import 'package:bidhouse/models/adsmodel.dart';
 import 'package:bidhouse/models/authenticationModel.dart';
@@ -49,7 +51,10 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
         leading: Container(),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection("Ads").snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection("Favourites")
+            .where('userEmail', isEqualTo: widget.userData.email)
+            .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(
@@ -90,8 +95,14 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
             child: ListView.builder(
               itemCount: documents.length,
               itemBuilder: (context, index) {
-                final doc = documents[index].data() as Map<String, dynamic>;
-                String initials = getUserInitials(doc['userName']);
+                // Convert Firestore data to a map
+                Map<String, dynamic> data =
+                    documents[index].data() as Map<String, dynamic>;
+
+                // Extract fields
+                String userEmail = data['userEmail'] ?? 'No Email';
+                Map<String, dynamic> adDetails = data['adDetails'] ?? {};
+                String initials = getUserInitials(adDetails['userName']);
                 return Container(
                   decoration: const BoxDecoration(
                       border: Border(bottom: BorderSide(width: 0.2))),
@@ -99,13 +110,27 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                     padding: const EdgeInsets.only(top: 2.0),
                     child: GestureDetector(
                       onTap: () {
-                        final adDetails = AdsModel.fromJson(documents[index]);
+                        AdsModel adDet = AdsModel(
+                          id: adDetails['id'],
+                          city: adDetails['city'] ?? '',
+                          areaSize: adDetails['areaSize'] ?? '',
+                          floors: adDetails['floors'],
+                          constructionType: adDetails['constructionType'] ?? '',
+                          constructionMode: adDetails['constructionMode'] ?? '',
+                          totalCost: adDetails['totalCost'] ?? '',
+                          userId: adDetails['userId'],
+                          userName: adDetails['userName'],
+                          userEmail: adDetails['userEmail'],
+                          userImageUrl: adDetails['userImageUrl'],
+                          userPhoneNo: adDetails['userPhoneNo'],
+                        );
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => AdsDetailsScreen(
-                              adDetails: adDetails,
+                              adDetails: adDet,
                               userData: widget.userData,
+                              showFav: true,
                             ),
                           ),
                         );
@@ -118,8 +143,8 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                             decoration: BoxDecoration(
                                 border: Border.all(width: 0.2),
                                 borderRadius: BorderRadius.circular(25)),
-                            child: doc['userImageUrl'] != ""
-                                ? Image.network(doc['userImageUrl'])
+                            child: adDetails['userImageUrl'] != ""
+                                ? Image.network(adDetails['userImageUrl'])
                                 : Center(
                                     child: Text(
                                     initials,
@@ -128,12 +153,12 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                           ),
                         ),
                         title: Text(
-                          doc['city'],
+                          adDetails['city'],
                           style: const TextStyle(
                               fontSize: 19, fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
-                          'Area: ${doc['areaSize']}, Floors: ${doc['floors']}',
+                          'Area: ${adDetails['areaSize']}, Floors: ${adDetails['floors']}',
                           style: TextStyle(color: AppConstants.appColor),
                         ), // Replace with your field
                       ),

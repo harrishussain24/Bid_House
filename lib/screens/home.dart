@@ -36,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
         toolbarHeight: 65,
         backgroundColor: color,
         centerTitle: false,
+        automaticallyImplyLeading: false,
         title: Text(
           "Hello ${widget.userData.name} ...👋🏻",
           style: TextStyle(
@@ -46,8 +47,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           SizedBox(
-            height: 50,
-            width: 50,
+            height: 45,
+            width: 45,
             child: ClipOval(
               child: (widget.userData.imageUrl != null &&
                       widget.userData.imageUrl!.isNotEmpty)
@@ -98,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 children: [
                   AppConstants.button(
-                    buttonWidth: 0.3,
+                    buttonWidth: 0.35,
                     buttonHeight: 0.05,
                     onTap: () {
                       Navigator.push(
@@ -111,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       );
                     },
-                    buttonText: "Homes",
+                    buttonText: "Ads",
                     textSize: 17,
                     context: context,
                   ),
@@ -119,10 +120,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 10,
                   ),
                   AppConstants.button(
-                    buttonWidth: 0.4,
+                    buttonWidth: 0.35,
                     buttonHeight: 0.05,
-                    onTap: () {},
-                    buttonText: "Commerical",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdsDisplayScreen(
+                            category: "My Ads",
+                            userData: widget.userData,
+                          ),
+                        ),
+                      );
+                    },
+                    buttonText: "My Ads",
                     textSize: 17,
                     context: context,
                   ),
@@ -193,24 +204,22 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(
                 height: 30,
               ),
-              widget.userData.userType == "User"
-                  ? AppConstants.button(
-                      buttonWidth: 0.6,
-                      buttonHeight: 0.06,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                PlotInfoScreen(userData: widget.userData),
-                          ),
-                        );
-                      },
-                      buttonText: 'Calculate Cost',
-                      textSize: 20,
-                      context: context,
-                    )
-                  : Container(),
+              AppConstants.button(
+                buttonWidth: 0.6,
+                buttonHeight: 0.06,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          PlotInfoScreen(userData: widget.userData),
+                    ),
+                  );
+                },
+                buttonText: 'Calculate Cost',
+                textSize: 20,
+                context: context,
+              ),
               const SizedBox(
                 height: 30,
               ),

@@ -107,12 +107,13 @@ class FireBaseHelper {
   //creating new User
   static Future<void> createUser(
       {required AuthenticationModel authModel,
+      required String password,
       required BuildContext context}) async {
     try {
       AppConstants.showLoadingDialog(
           context: context, title: "Creating Your Account");
       UserCredential userCredential = await auth.createUserWithEmailAndPassword(
-          email: authModel.email, password: authModel.password);
+          email: authModel.email, password: password);
       authModel.id = userCredential.user!.uid;
       await db.collection("Users").doc(authModel.id).set({
         'id': authModel.id,
@@ -121,7 +122,6 @@ class FireBaseHelper {
         'phoneNo': authModel.phoneNo,
         'imageUrl': authModel.imageUrl,
         'userType': authModel.userType,
-        'password': authModel.password,
       }).whenComplete(() async {
         await Localstoragehelper.savingDataToStorage(authModel);
         print(authModel.email);

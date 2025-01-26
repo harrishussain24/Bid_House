@@ -17,7 +17,6 @@ class AuthenticationModel {
   String phoneNo;
   String? imageUrl;
   String userType;
-  String password;
 
   AuthenticationModel({
     this.id,
@@ -26,7 +25,6 @@ class AuthenticationModel {
     required this.phoneNo,
     this.imageUrl,
     required this.userType,
-    required this.password,
   });
 
   factory AuthenticationModel.fromJson(DocumentSnapshot json) =>
@@ -37,7 +35,6 @@ class AuthenticationModel {
         phoneNo: json["phoneNo"],
         imageUrl: json["imageUrl"],
         userType: json["userType"],
-        password: json["password"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -47,6 +44,5 @@ class AuthenticationModel {
         "phoneNo": phoneNo,
         "imageUrl": imageUrl,
         "userType": userType,
-        "password": password,
       };
 }

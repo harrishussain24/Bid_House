@@ -53,7 +53,6 @@ class _ChatsScreenState extends State<ChatsScreen> {
             fontSize: 25,
           ),
         ),
-        leading: Container(),
       ),
       body: StreamBuilder<List<ChatRoomModel>>(
         stream: _chatsStream,

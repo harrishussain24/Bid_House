@@ -204,12 +204,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     onTap: () async {
                       //saving user Data
                       final user = AuthenticationModel(
-                          name: nameController.text.toString().trim(),
-                          email: emailController.text.toString().trim(),
-                          phoneNo: phoneNoController.text.toString().trim(),
-                          imageUrl: '',
-                          userType: userType,
-                          password: passwordController.text.toString().trim());
+                        name: nameController.text.toString().trim(),
+                        email: emailController.text.toString().trim(),
+                        phoneNo: phoneNoController.text.toString().trim(),
+                        imageUrl: '',
+                        userType: userType,
+                      );
                       //checking the inputs of the user
                       bool validate = Datavalidatinghelper.validateSignUpData(
                         userName: nameController.text.trim(),
@@ -228,7 +228,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         if (await validateUserEmail) {
                           //creating user
                           FireBaseHelper.createUser(
-                                  authModel: user, context: context)
+                                  authModel: user,
+                                  password:
+                                      passwordController.text.trim().toString(),
+                                  context: context)
                               .whenComplete(() {
                             nameController.clear();
                             emailController.clear();

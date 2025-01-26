@@ -20,7 +20,7 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
     with TickerProviderStateMixin {
   String selectedUnit = 'Marla'; //for saving area unit user will select.
   String selectedCity = 'Select City'; //for saving the city user will select.
-  num floors = 0;
+  num floors = 2;
   String consType = "Not Selected", consMode = "Not Selected";
   bool constructionComplete = false;
   bool constructionNotComplete = false;
@@ -58,7 +58,7 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
       setState(() {
         selectedCity = 'Select City';
         selectedUnit = 'Marla';
-        floors = 0;
+        floors = 2;
         consType = "Not Selected";
         consMode = "Not Selected";
         constructionComplete = false;
@@ -95,7 +95,6 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
             fontSize: 25,
           ),
         ),
-        leading: Container(),
       ),
       body: SingleChildScrollView(
         child: SafeArea(
@@ -111,101 +110,51 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
             width: MediaQuery.sizeOf(context).width,
             height: MediaQuery.sizeOf(context).height,
             padding: EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              children: [
-                SizedBox(height: MediaQuery.sizeOf(context).height * 0.03),
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: Text(
-                    'City',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                SizedBox(height: 10),
-                //City DropDown *****************************************************************
-                Container(
-                  width: MediaQuery.sizeOf(context).width,
-                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(width: 0.5)),
-                  child: Theme(
-                    data: Theme.of(context).copyWith(
-                      splashColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      hoverColor: Colors.transparent,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  SizedBox(height: MediaQuery.sizeOf(context).height * 0.03),
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      'City',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        menuWidth: MediaQuery.sizeOf(context).width * 0.8,
-                        borderRadius: BorderRadius.circular(20),
-                        value: selectedCity,
-                        icon: Icon(Icons.arrow_drop_down, color: color),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedCity = newValue!;
-                          });
-                        },
-                        items: <String>[
-                          'Select City',
-                          'Islamabad',
-                          'Lahore',
-                          'Karachi',
-                          'Rawalpindi'
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                value,
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                  ),
+                  SizedBox(height: 10),
+                  //City DropDown *****************************************************************
+                  Container(
+                    width: MediaQuery.sizeOf(context).width,
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(width: 0.5)),
+                    child: Theme(
+                      data: Theme.of(context).copyWith(
+                        splashColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
                       ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 30),
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: Text(
-                    'Area Size',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                SizedBox(height: 10),
-                //Area Size TextField *****************************************************************
-                TextFormField(
-                  controller: _controller,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: color, width: 2.0),
-                    ),
-                    suffixIcon: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      decoration: BoxDecoration(
-                          border: Border(left: BorderSide(color: Colors.grey))),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
+                          menuWidth: MediaQuery.sizeOf(context).width * 0.8,
                           borderRadius: BorderRadius.circular(20),
-                          value: selectedUnit,
+                          value: selectedCity,
                           icon: Icon(Icons.arrow_drop_down, color: color),
                           onChanged: (String? newValue) {
                             setState(() {
-                              selectedUnit = newValue!;
+                              selectedCity = newValue!;
                             });
                           },
-                          items: <String>['Marla', 'Kanal']
-                              .map<DropdownMenuItem<String>>((String value) {
+                          items: <String>[
+                            'Select City',
+                            'Islamabad',
+                            'Lahore',
+                            'Karachi',
+                            'Rawalpindi'
+                          ].map<DropdownMenuItem<String>>((String value) {
                             return DropdownMenuItem<String>(
                               value: value,
                               child: Padding(
@@ -223,133 +172,194 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
                         ),
                       ),
                     ),
-                    hintText: 'Enter Area Size',
-                    hintStyle: TextStyle(color: color),
                   ),
-                ),
-                SizedBox(height: 30),
-                //DropDown for more Options Button **************************************************
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      showConstructionOptions = !showConstructionOptions;
-                    });
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        showConstructionOptions
-                            ? "Less Options"
-                            : "More Options",
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: color),
-                      ),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Icon(
-                        showConstructionOptions
-                            ? Icons.arrow_drop_up
-                            : Icons.arrow_drop_down,
-                        color: color,
-                      ),
-                    ],
+                  SizedBox(height: 30),
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      'Area Size',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ),
-                AnimatedSize(
-                  duration: const Duration(
-                      milliseconds: 400), // Controls the speed of the animation
-                  curve: Curves.easeInOut, // Smooth transition effect
-                  child: showConstructionOptions
-                      ? _buildConstructionOptions(color)
-                      : Container(),
-                ),
-                SizedBox(height: 40),
-                AppConstants.button(
-                  buttonWidth: 0.8,
-                  buttonHeight: 0.07,
-                  onTap: () {
-                    int area;
-                    if (selectedUnit == "Kanal") {
-                      area = 20 * int.parse(_controller.text.toString().trim());
+                  SizedBox(height: 10),
+                  //Area Size TextField *****************************************************************
+                  TextFormField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: color, width: 2.0),
+                      ),
+                      suffixIcon: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.0),
+                        decoration: BoxDecoration(
+                            border:
+                                Border(left: BorderSide(color: Colors.grey))),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            borderRadius: BorderRadius.circular(20),
+                            value: selectedUnit,
+                            icon: Icon(Icons.arrow_drop_down, color: color),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                selectedUnit = newValue!;
+                              });
+                            },
+                            items: <String>['Marla', 'Kanal']
+                                .map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    value,
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                      hintText: 'Enter Area Size',
+                      hintStyle: TextStyle(color: color),
+                    ),
+                  ),
+                  SizedBox(height: 30),
+                  //DropDown for more Options Button **************************************************
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        showConstructionOptions = !showConstructionOptions;
+                      });
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          showConstructionOptions
+                              ? "Less Options"
+                              : "More Options",
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: color),
+                        ),
+                        SizedBox(
+                          width: 5,
+                        ),
+                        Icon(
+                          showConstructionOptions
+                              ? Icons.arrow_drop_up
+                              : Icons.arrow_drop_down,
+                          color: color,
+                        ),
+                      ],
+                    ),
+                  ),
+                  AnimatedSize(
+                    duration: const Duration(
+                        milliseconds:
+                            400), // Controls the speed of the animation
+                    curve: Curves.easeInOut, // Smooth transition effect
+                    child: showConstructionOptions
+                        ? _buildConstructionOptions(color)
+                        : Container(),
+                  ),
+                  SizedBox(height: 40),
+                  AppConstants.button(
+                    buttonWidth: 0.8,
+                    buttonHeight: 0.07,
+                    onTap: () {
+                      int area;
+                      if (selectedUnit == "Kanal") {
+                        area =
+                            20 * int.parse(_controller.text.toString().trim());
+                        setState(() {});
+                      } else {
+                        area = int.parse(_controller.text.toString().trim());
+                      }
+                      print(floors.toString() + consMode + consType);
+
+                      CostCalculator.valuesCollector(
+                        area: area,
+                        city: selectedCity,
+                        selectedFloors: floors,
+                        consMode: consMode,
+                        consType: consType,
+                      );
                       setState(() {});
-                    } else {
-                      area = int.parse(_controller.text.toString().trim());
-                    }
-                    print(floors.toString() + consMode + consType);
-                    CostCalculator.valuesCollector(
-                      area: area,
-                      city: selectedCity,
-                      selectedFloors: floors,
-                      consMode: consMode,
-                      consType: consType,
-                    );
-                    setState(() {});
-                  },
-                  buttonText: 'Calculate Cost',
-                  textSize: 20,
-                  context: context,
-                ),
-                SizedBox(
-                  height: 50,
-                ),
-                CostCalculator.finalCost != ''
-                    ? const Text(
-                        'Total Estimated Cost',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 24),
-                      )
-                    : Container(),
-                SizedBox(
-                  height: 10,
-                ),
-                Text(
-                  CostCalculator.finalCost,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                CostCalculator.finalCost == ''
-                    ? Container()
-                    : AppConstants.button(
-                        buttonWidth: 0.5,
-                        buttonHeight: 0.05,
-                        onTap: () {
-                          num checkingFloors;
-                          if (floors == 0) {
-                            checkingFloors = 2;
-                          } else {
-                            checkingFloors = floors;
-                          }
-                          var data = AdsModel(
-                            id: "",
-                            city: selectedCity,
-                            areaSize:
-                                "${_controller.text.toString()} $selectedUnit",
-                            floors: checkingFloors.toString(),
-                            constructionType: consType,
-                            constructionMode: consMode,
-                            totalCost: CostCalculator.finalCost,
-                            userId: widget.userData.id,
-                            userName: widget.userData.name,
-                            userEmail: widget.userData.email,
-                            userImageUrl: widget.userData.imageUrl!,
-                            userPhoneNo: widget.userData.phoneNo,
-                          );
-                          saveData(data);
-                        },
-                        buttonText: "Post Ad",
-                        textSize: 17,
-                        context: context,
-                      ),
-                const SizedBox(
-                  height: 40,
-                ),
-              ],
+                    },
+                    buttonText: 'Calculate Cost',
+                    textSize: 20,
+                    context: context,
+                  ),
+                  SizedBox(
+                    height: 50,
+                  ),
+                  CostCalculator.finalCost != ''
+                      ? const Text(
+                          'Total Estimated Cost',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 24),
+                        )
+                      : Container(),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Text(
+                    CostCalculator.finalCost,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  widget.userData.userType == "Bidder"
+                      ? Container()
+                      : CostCalculator.finalCost == ''
+                          ? Container()
+                          : AppConstants.button(
+                              buttonWidth: 0.5,
+                              buttonHeight: 0.05,
+                              onTap: () {
+                                num checkingFloors;
+                                if (floors == 0) {
+                                  checkingFloors = 2;
+                                } else {
+                                  checkingFloors = floors;
+                                }
+                                var data = AdsModel(
+                                  id: "",
+                                  city: selectedCity,
+                                  areaSize:
+                                      "${_controller.text.toString()} $selectedUnit",
+                                  floors: checkingFloors.toString(),
+                                  constructionType: consType,
+                                  constructionMode: consMode,
+                                  totalCost: CostCalculator.finalCost,
+                                  userId: widget.userData.id,
+                                  userName: widget.userData.name,
+                                  userEmail: widget.userData.email,
+                                  userImageUrl: widget.userData.imageUrl!,
+                                  userPhoneNo: widget.userData.phoneNo,
+                                );
+                                saveData(data);
+                              },
+                              buttonText: "Post Ad",
+                              textSize: 17,
+                              context: context,
+                            ),
+                  const SizedBox(
+                    height: 40,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -395,7 +405,6 @@ class _PlotInfoScreenState extends State<PlotInfoScreen>
                   });
                 },
                 items: <String>[
-                  0.toString(),
                   1.toString(),
                   2.toString(),
                   3.toString(),

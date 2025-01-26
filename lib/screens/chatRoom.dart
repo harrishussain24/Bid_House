@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:bidhouse/constants.dart';
 import 'package:bidhouse/models/chatRoomModel.dart';
 import 'package:bidhouse/models/messageModel.dart';
